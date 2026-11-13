@@ -4,7 +4,7 @@
 variable "resource_group_name" {
   description = "Grupo de recursos donde vive todo Vankoo. Lo crea el dueño de la suscripción, no Terraform."
   type        = string
-  default     = "liquilabs-vankoo"
+  default     = "finbridge-vankoo"
 }
 
 variable "location" {

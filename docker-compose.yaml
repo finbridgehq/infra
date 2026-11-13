@@ -4,7 +4,7 @@ services:
   # --- Profile Service ----
   profile-service:
     build:
-      context: ../vankoo-profile-service
+      context: ../profile-service
       dockerfile: Dockerfile
     hostname: profile-service
     networks:
@@ -62,7 +62,7 @@ services:
   # --- IAM Service ---
   iam-service:
     build:
-      context: ../vankoo-iam-service
+      context: ../iam-service
       dockerfile: Dockerfile
     hostname: iam-service
     networks:
@@ -113,7 +113,7 @@ services:
   # --- Invoicing Service ---
   invoicing-service:
     build:
-      context: ../vankoo-invoicing-service
+      context: ../invoicing-service
       dockerfile: LiquiLabs.Vankoo.Invoicing/Dockerfile
     hostname: invoicing-service
     networks:
@@ -255,7 +255,7 @@ services:
   # tradicional). Ver docs/adr/0001 y 0002 en vankoo-finance-service.
   finance-service:
     build:
-      context: ../vankoo-finance-service
+      context: ../finance-service
       dockerfile: Dockerfile
     hostname: finance-service
     networks:
@@ -456,7 +456,7 @@ services:
   # --- DISCOVERY SERVER (Eureka) ---
   discovery-server:
     build:
-      context: ../vankoo-discovery-server
+      context: ../discovery-server
       dockerfile: Dockerfile
     hostname: discovery-server
     networks:
@@ -475,7 +475,7 @@ services:
   # --- API Gateway (Spring Cloud Gateway) ---
   api-gateway:
     build:
-      context: ../vankoo-api-gateway
+      context: ../api-gateway
       dockerfile: Dockerfile
     hostname: api-gateway
     networks:

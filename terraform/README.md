@@ -1,14 +1,14 @@
 # Vankoo en Azure con Terraform
 
 Despliegue de Vankoo en Azure Container Apps. Todo vive en el grupo de recursos
-`liquilabs-vankoo`, región Central US. Se enciende antes de una expo y se apaga
+`finbridge-vankoo`, región Central US. Se enciende antes de una expo y se apaga
 después.
 
 ## Requisitos
 
-- Acceso al grupo `liquilabs-vankoo` (lo da el dueño de la suscripción).
+- Acceso al grupo `finbridge-vankoo` (lo da el dueño de la suscripción).
 - `az` con sesión iniciada (`az login`), `terraform` ≥ 1.9 y Docker con `buildx`.
-- Los repos de los servicios clonados junto a `vankoo-infra`, como para el compose.
+- Los repos de los servicios clonados junto a `infra`, como para el compose.
 - En Windows, ejecutar los scripts desde Git Bash o WSL.
 
 ## Uso

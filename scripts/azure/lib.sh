@@ -6,10 +6,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TF_DIR="$INFRA_DIR/terraform"
-# Los repos de los servicios viven junto a vankoo-infra (como en el compose).
+# Los repos de los servicios viven junto a infra (como en el compose).
 PROJECTS_DIR="$(cd "$INFRA_DIR/.." && pwd)"
 
-VANKOO_RG="${VANKOO_RG:-liquilabs-vankoo}"
+VANKOO_RG="${VANKOO_RG:-finbridge-vankoo}"
 VANKOO_LOCATION="${VANKOO_LOCATION:-centralus}"
 
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
