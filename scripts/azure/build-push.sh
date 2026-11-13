@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Construye las imágenes de los servicios desde sus repos (junto a infra)
+# Construye las imágenes de los servicios desde sus repos (junto a vankoo-infra)
 # y las sube al registro de Azure. Escribe las referencias en
 # terraform/apps/images.auto.tfvars, que la capa apps lee sola.
 #
@@ -15,6 +15,7 @@ SERVICES=(
   "api-gateway|api-gateway|Dockerfile"
   "iam-service|iam-service|Dockerfile"
   "invoicing-service|invoicing-service|LiquiLabs.Vankoo.Invoicing/Dockerfile"
+  "profile-service|profile-service|Dockerfile"
 )
 
 tf_init base
