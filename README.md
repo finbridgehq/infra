@@ -13,7 +13,6 @@ Te recomiendo instalar estos plugins antes que nada:
 - YAML: indispensable para que DataGrip use la indentación correcta en los archivos YAML, como el `docker-compose.yaml`.
 - Docker: para poder ver los logs de los contenedores de Docker.
 - Shell Script: para poder ejecutar los scripts de shell (.sh) desde DataGrip.
-- Batch Scripts Support: para poder ejecutar los scripts de Windows (.bat) desde DataGrip.
 - .env files: para poder trabajar con archivos .env desde DataGrip.
 - Terminal: para tener una terminal integrada en DataGrip que no trae por defecto (aunque no es indispensable si prefieres una terminal externa).
 
@@ -27,8 +26,8 @@ Ten en cuenta que el archivo `docker-compose.yaml` ya tiene variables de entorno
 
 ## Usar los scripts
 
-- Los que tienen extensión `.sh` son scripts de shell, que se pueden ejecutar en sistemas operativos basados en Unix (como Linux o macOS).
-- Los que tienen extensión `.bat` son scripts de Windows, que se pueden ejecutar en sistemas operativos Windows.
+- Todos son scripts de shell (`.sh`). En Linux y macOS se ejecutan directamente; en Windows, desde Git Bash o WSL.
+- Los de `scripts/local/` manejan el entorno local con Docker Compose, y los de `scripts/azure/` el despliegue en Azure. Se pueden ejecutar desde cualquier carpeta.
 
 Si estás en DataGrip, puedes ejecutar los scripts con el plugin "Shell Script" para que que aparezca un botón de "Run" al lado de cada script.
 
@@ -36,20 +35,48 @@ Si estás en DataGrip, puedes ejecutar los scripts con el plugin "Shell Script" 
 
 ### Para levantar los servicios:
 
-- Puedes ejecutar el script `start.sh` (o `start.bat` en Windows) para levantar los servicios. Este script lenvantará los servicios de Vankoo utilizando Docker Compose.
+- Puedes ejecutar el script `scripts/local/local-start.sh` para levantar los servicios. Este script levantará los servicios de Vankoo utilizando Docker Compose.
 - También puedes usar el comando `docker compose up --build -d` en la raíz del repositorio. Esto levantará todos los servicios de Vankoo en contenedores de Docker.
 
 ### Para detener los servicios:
 
-- Puedes ejecutar el script `stop.sh` (o `stop.bat` en Windows) para detener los servicios. Este script detendrá los servicios de Vankoo utilizando Docker Compose.
+- Puedes ejecutar el script `scripts/local/local-stop.sh` para detener los servicios. Este script detendrá los servicios de Vankoo utilizando Docker Compose, sin borrar sus datos.
 - También puedes usar el comando `docker compose stop` en la raíz del repositorio. Esto detendrá todos los servicios de Vankoo que estén corriendo en contenedores de Docker.
 
 ### Para eliminar los servicios:
 
-- Puedes ejecutar el script `down.sh` (o `down.bat` en Windows) para eliminar los servicios. Este script eliminará los servicios de Vankoo utilizando Docker Compose.
-- También puedes usar el comando `docker compose down` en la raíz del repositorio. Esto eliminará todos los servicios de Vankoo que estén corriendo en contenedores de Docker, así como las redes y volúmenes asociados a esos servicios.
+- Puedes ejecutar el script `scripts/local/local-remove.sh` para eliminar los servicios. Este script eliminará los contenedores, las redes y también los volúmenes, es decir, los datos de las bases de datos (`docker compose down -v`).
+- También puedes usar el comando `docker compose down` en la raíz del repositorio. Esto eliminará los contenedores y las redes de Vankoo, pero conservará los volúmenes; para borrarlos también, añade `-v`.
 
-> Nota: DataGrip no tiene terminal integrada, así que deberás descargar el plugin `Terminal` oficial de JetBrains si quieres ejecutar los comandos desde el IDE. En caso quieras ejecutarlos manualmente sin los archivos .sh o .bat, tendrás que hacerlo desde una terminal externa como PowerShell o CMD (en Windows) o Terminal (en macOS o Linux). También te sugiero descargar Warp, que es una terminal más moderna y con mejor experiencia de usuario que las terminales tradicionales, pero no es indispensable.
+### KYC con fichas de demostración (parche temporal)
+
+Para exponer el KYC sin usar la ficha RUC de una persona real, risk puede aceptar fichas firmadas por una CA de demostración de Vankoo. Salen siempre como «Verificado (demo)», aparte de «Verificado»:
+
+```bash
+cd ../vankoo-risk-service && uv run python -m verification demo-ca
+uv run python -m verification demo-ficha --ruc 20601234567 --name "TEXTILES ANDINOS S.A.C." --out demo-kyc/ficha.pdf
+cd ../vankoo-infra && docker compose -f docker-compose.yaml -f docker-compose.kyc-demo.yaml up -d risk-service
+```
+
+`docker-compose.kyc-demo.yaml` solo añade `KYC_DEMO_CA_PATH` y monta `demo-kyc/` de solo lectura. **Nunca en producción.** Las reglas y las opciones de `demo-ficha` están en `docs/KYC_RULES.md` de risk.
+
+### Notificaciones (push y email)
+
+`notification-service` (puerto 3001) consume los eventos de Kafka y avisa a los usuarios:
+
+- **Emails**: llegan a Mailpit, igual que los de IAM. Se leen en http://localhost:8025.
+- **Push**: con `NOTIFICATION_PUSH_PROVIDER=logging` (por defecto) no se envía nada, se escribe en el log del contenedor (`docker compose logs -f notification-service`). Para enviarlo a un dispositivo real, pon `firebase` y las variables `FIREBASE_*` en tu `.env`.
+- **API**: los dispositivos se registran por el gateway en `/notification/api/v1/device-registrations`. La documentación está en http://localhost:3001/reference y en el Scalar del gateway.
+
+Para probarlo sin los demás servicios, publica un evento desde kafka-ui (http://localhost:9000). Por ejemplo, en el tópico `vankoo.iam.events`:
+
+```json
+{ "id": "40000000-0000-4000-8000-000000000001", "email": "mype@vankoo.test", "roles": ["ROLE_MYPE"] }
+```
+
+Al momento aparece el email de bienvenida en Mailpit. Los eventos que se notifican están en el README de `vankoo-notification-service`.
+
+> Nota: DataGrip no tiene terminal integrada, así que deberás descargar el plugin `Terminal` oficial de JetBrains si quieres ejecutar los comandos desde el IDE. En caso quieras ejecutarlos manualmente sin los scripts, tendrás que hacerlo desde una terminal externa como Git Bash o WSL (en Windows) o Terminal (en macOS o Linux). También te sugiero descargar Warp, que es una terminal más moderna y con mejor experiencia de usuario que las terminales tradicionales, pero no es indispensable.
 
 ### Para ver los logs de los servicios:
 
@@ -74,8 +101,12 @@ Para crear un nuevo datasource y conectarse a las bases de datos levantadas en d
 
 > Nota: Algunas bases de datos, como Oracle, pueden requerir configuraciones adicionales. Para ello, revisa el archivo [Conectarse a Oracle Database con Data Source](docs/guides/oracle-data-source.md) para configurar correctamente la conexión a Oracle Database en DataGrip.
 
+## Despliegue en Azure
+
+El despliegue en Azure se hace con Terraform y tres scripts: `scripts/azure/azure-deploy.sh` para crear, actualizar o reanudar, `scripts/azure/azure-stop.sh` para detener sin borrar y `scripts/azure/azure-destroy.sh` para borrar todo. Los requisitos, las capas y cómo añadir un servicio están en [terraform/README.md](terraform/README.md).
+
 ## Info adicional
 
-El resto de carpetas (`azure`, `database` y `postman`) no se usan aún, se hablará luego de eso.
+El resto de carpetas (`database` y `postman`) no se usan aún, se hablará luego de eso.
 
 Los servicios restantes del `docker-compose.yaml` se irán agregando a medida que vayamos avanzando.
